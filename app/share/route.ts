@@ -1,8 +1,33 @@
+import prisma from "@/prisma/db";
 import { Comment } from "../types";
 
+export type ShareRequest = {
+  url: string;
+  comments: Comment[];
+}
+
 export async function POST(request: Request) {
-  const dataArray: Comment[] = await request.json();
-  console.log(dataArray);
-  const randomId = Math.random().toString(36).substring(7);
-  return new Response(JSON.stringify({ id: randomId }), { status: 200 });
+  const data: ShareRequest = await request.json();
+
+  console.log(data);
+
+  const comments = {
+    create: data.comments.map((comment) => {
+      return {
+        offsetX: comment.offsetX,
+        offsetY: comment.offsetY,
+        selector: comment.selector,
+        text: comment.text,
+      }
+    })
+  }
+
+  const page = await prisma.page.create({
+    data: {
+      url: data.url,
+      comments,
+    },
+  })
+
+  return new Response(JSON.stringify({ id: page.id }), { status: 200 });
 }
